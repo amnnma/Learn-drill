@@ -1,0 +1,140 @@
+{
+  "type": "hbase",
+  "config": {
+    "hbase.zookeeper.quorum": "localhost",
+    "hbase.zookeeper.property.clientPort": "2181"
+  },
+  "size.calculator.enabled": false,
+  "enabled": true
+}
+
+
+Install Zookeeper locally:
+Download zookeeper library from Zookeeper homepage: apache-zookeeper-3.7.0-bin.tar
+tar -xvzf apache-zookeeper-3.7.0-bin.tar.gz
+cd conf
+cp zoo_sample.cfg zoo.cfg
+cd ..
+bin/zkServer.sh start
+
+Install HBase locally:
+Refer https://hbase.apache.org/ to download HBase
+For further steps, refer: https://hbase.apache.org/book.html#quickstart
+tar -xzvf hbase-2.4.2-bin.tar.gz
+cd hbase-2.4.2
+export JAVA_HOME=$(/usr/libexec/java_home)
+bin/start-hbase.sh 
+Go to http://localhost:16010 to view the HBase Web UI.
+
+bin/hbase shell
+
+create 'users','account','address'
+create 'clicks','clickinfo','iteminfo'
+exit
+
+touch testdata.txt
+
+Write the following statements into testdata.txt:
+put 'users','users1','account:name','Alice'
+put 'users','users1','address:street','123 Ballmer Av'
+put 'users','users1','address:zipcode','12345'
+put 'users','users1','address:state','CA'
+put 'users','users2','account:name','Bob'
+put 'users','users2','address:street','1 Infinite Loop'
+put 'users','users2','address:zipcode','12345'
+put 'users','users2','address:state','CA'
+put 'users','users3','account:name','Frank'
+put 'users','users3','address:street','435 Walker Ct'
+put 'users','users3','address:zipcode','12345'
+put 'users','users3','address:state','CA'
+put 'users','users4','account:name','Mary'
+put 'users','users4','address:street','56 Southern Pkwy'
+put 'users','users4','address:zipcode','12345'
+put 'users','users4','address:state','CA'
+put 'clicks','click1','clickinfo:usersid','users1'
+put 'clicks','click1','clickinfo:url','http://www.google.com'
+put 'clicks','click1','clickinfo:time','2014-01-01 12:01:01.0001'
+put 'clicks','click1','iteminfo:itemtype','image'
+put 'clicks','click1','iteminfo:quantity','1'
+put 'clicks','click2','clickinfo:usersid','users1'
+put 'clicks','click2','clickinfo:url','http://www.amazon.com'
+put 'clicks','click2','clickinfo:time','2014-01-01 01:01:01.0001'
+put 'clicks','click2','iteminfo:itemtype','image'
+put 'clicks','click2','iteminfo:quantity','1'
+put 'clicks','click3','clickinfo:usersid','users2'
+put 'clicks','click3','clickinfo:url','http://www.google.com'
+put 'clicks','click3','clickinfo:time','2014-01-01 01:02:01.0001'
+put 'clicks','click3','iteminfo:itemtype','text'
+put 'clicks','click3','iteminfo:quantity','2'
+put 'clicks','click4','clickinfo:usersid','users2'
+put 'clicks','click4','clickinfo:url','http://www.ask.com'
+put 'clicks','click4','clickinfo:time','2013-02-01 12:01:01.0001'
+put 'clicks','click4','iteminfo:itemtype','text'
+put 'clicks','click4','iteminfo:quantity','5'
+put 'clicks','click5','clickinfo:usersid','users2'
+put 'clicks','click5','clickinfo:url','http://www.reuters.com'
+put 'clicks','click5','clickinfo:time','2013-02-01 12:01:01.0001'
+put 'clicks','click5','iteminfo:itemtype','text'
+put 'clicks','click5','iteminfo:quantity','100'
+put 'clicks','click6','clickinfo:usersid','users3'
+put 'clicks','click6','clickinfo:url','http://www.google.com'
+put 'clicks','click6','clickinfo:time','2013-02-01 12:01:01.0001'
+put 'clicks','click6','iteminfo:itemtype','image'
+put 'clicks','click6','iteminfo:quantity','1'
+put 'clicks','click7','clickinfo:usersid','users3'
+put 'clicks','click7','clickinfo:url','http://www.ask.com'
+put 'clicks','click7','clickinfo:time','2013-02-01 12:45:01.0001'
+put 'clicks','click7','iteminfo:itemtype','image'
+put 'clicks','click7','iteminfo:quantity','10'
+put 'clicks','click8','clickinfo:usersid','users4'
+put 'clicks','click8','clickinfo:url','http://www.amazon.com'
+put 'clicks','click8','clickinfo:time','2013-02-01 22:01:01.0001'
+put 'clicks','click8','iteminfo:itemtype','image'
+put 'clicks','click8','iteminfo:quantity','1'
+put 'clicks','click9','clickinfo:usersid','users4'
+put 'clicks','click9','clickinfo:url','http://www.amazon.com'
+put 'clicks','click9','clickinfo:time','2013-02-01 22:01:01.0001'
+put 'clicks','click9','iteminfo:itemtype','image'
+put 'clicks','click9','iteminfo:quantity','10'
+
+Now, use the command:
+cat testdata.txt | bin/hbase shell
+
+Now in Apache Drill:
+SELECT * FROM hbase.users;
+
+For better reading of data, you will have to use convert_from and provide it 'UTF-8' as value:
+ SELECT CONVERT_FROM(row_key, 'UTF8') AS userid, 
+        CONVERT_FROM(users.account.name, 'UTF8') AS name, 
+        CONVERT_FROM(users.address.state, 'UTF8') AS state, 
+        CONVERT_FROM(users.address.street, 'UTF8') AS street, 
+        CONVERT_FROM(users.address.zipcode, 'UTF8') AS zipcode 
+ FROM users;
+
+Similarly, select * from clicks;
+And its converted version:
+SELECT CONVERT_FROM(row_key, 'UTF8') AS clickid, 
+       CONVERT_FROM(clicks.clickinfo.usersid, 'UTF8') AS userid, 
+       CONVERT_FROM(clicks.clickinfo.`time`, 'UTF8') AS `time`,
+       CONVERT_FROM(clicks.clickinfo.url, 'UTF8') AS url 
+  FROM clicks
+
+
+A complex example:
+
+SELECT * FROM 
+(
+SELECT CONVERT_FROM(row_key, 'UTF8') AS userid, 
+        CONVERT_FROM(users.account.name, 'UTF8') AS name, 
+        CONVERT_FROM(users.address.state, 'UTF8') AS state, 
+        CONVERT_FROM(users.address.street, 'UTF8') AS street, 
+        CONVERT_FROM(users.address.zipcode, 'UTF8') AS zipcode 
+ FROM students;
+) t LEFT JOIN 
+(
+    SELECT CONVERT_FROM(row_key, 'UTF8') AS clickid, 
+       CONVERT_FROM(clicks.clickinfo.usersid, 'UTF8') AS userid, 
+       CONVERT_FROM(clicks.clickinfo.`time`, 'UTF8') AS `time`,
+       CONVERT_FROM(clicks.clickinfo.url, 'UTF8') AS url 
+  FROM clicks
+) c ON t.userid = c.userid;

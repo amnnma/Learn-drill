@@ -1,0 +1,37 @@
+2 libraries are available: drillpy and pydrill
+
+pip install drillpy
+
+from drillpy import connect
+con = connect(host="localhost", port=8047, db="mongo")
+cur = con.cursor()
+queryResult = cur.execute("select * from mongo.drill.`user`")
+df = queryResult.fetchall()
+print(df)
+con.close()
+
+python3 test_drillpy.py 
+
+Handling variables:
+userName = "John Doe"
+cityName = "Mumbai"
+queryResult = cur.execute("select * from mongo.drill.`user` where name = ? and city = ?", (userName, cityName))
+
+pip install pydrill
+
+from pydrill.client import PyDrill
+  
+drill = PyDrill(host="localhost", port=8047)
+
+if not drill.is_active():
+    raise ImproperlyConfigured("Please run Drill frist");
+
+queryResult = drill.query("select * from mongo.drill.`user`");
+df = queryResult.to_dataframe()
+print(df)
+
+Complex query possible:
+select u.name, u.city, u.state, g.latitude, g.longitude from mongo.drill.`user` u, mysql1.drill.`geolocation` g where u.city = g.city
+
+Many supported API calls. Reference: https://pydrill.readthedocs.io/en/latest/readme.html#installation
+

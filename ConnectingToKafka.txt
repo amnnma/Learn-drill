@@ -1,0 +1,59 @@
+Default configuration:
+{
+  "type": "kafka",
+  "kafkaConsumerProps": {
+    "key.deserializer": "org.apache.kafka.common.serialization.ByteArrayDeserializer",
+    "auto.offset.reset": "earliest",
+    "bootstrap.servers": "localhost:9092",
+    "group.id": "drill-query-consumer",
+    "enable.auto.commit": "true",
+    "value.deserializer": "org.apache.kafka.common.serialization.ByteArrayDeserializer",
+    "session.timeout.ms": "30000"
+  },
+  "enabled": false
+}
+
+
+Appendix:
+Install Zookeeper locally:
+Download zookeeper library from Zookeeper homepage: apache-zookeeper-3.7.0-bin.tar
+tar -xvzf apache-zookeeper-3.7.0-bin.tar.gz
+cd apache-zookeeper-3.7.0
+cd conf
+cp zoo_sample.cfg zoo.cfg
+cd ..
+bin/zkServer.sh start
+
+For Kafka standalone installation, you can follow this: https://kafka.apache.org/quickstart
+You will have to download kafka tar file from its homepage.
+I have downloaded kafka_2.12-2.7.1.tgz
+tar -xvzf kafka_2.12-2.7.1.tgz
+cd kafka_2.12-2.7.1
+The config file is present at config/server.properties and has zookeeper setting pointing to localhost:2181. You will have to change this if you are not using local zookeeper.
+
+For starting Kafka, enter the following command from the kafka folder:
+bin/kafka-server-start.sh config/server.properties
+
+Creating topic with name "userDetails"
+bin/kafka-topics.sh --create --topic userDetails --bootstrap-server localhost:9092
+
+Describe topic
+bin/kafka-topics.sh --describe --topic userDetails --bootstrap-server localhost:9092
+
+Writing to topic:
+Run the console producer client to write a few events into your topic. By default, each line you enter will result in a separate event being written to the topic.
+
+bin/kafka-console-producer.sh --topic userDetails --bootstrap-server localhost:9092
+{"employeeId": 1,"name": "John Doe","city": "Mumbai","state": "Maharashtra","pincode": "400001"}
+{"employeeId": 2,"name": "Ravi Kumar","city": "Patna","state": "Bihar","pincode": "800001"}
+
+You can stop using Ctrl+C
+
+Reading from topic:
+bin/kafka-console-consumer.sh --topic userDetails --from-beginning --bootstrap-server localhost:9092
+
+You can stop using Ctrl+C
+
+Deleting topic
+ bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic userDetails
+
